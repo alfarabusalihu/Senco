@@ -1,0 +1,167 @@
+# ============================================================================
+# Senco Weekly Planner - Root .gitignore
+# ============================================================================
+
+# ============================================================================
+# Dependencies
+# ============================================================================
+**/node_modules/
+**/.pnp
+**/.pnp.*
+
+# ============================================================================
+# Testing
+# ============================================================================
+**/coverage/
+**/.nyc_output/
+
+# ============================================================================
+# Next.js (Frontend)
+# ============================================================================
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+# ============================================================================
+# NestJS (Backend)
+# ============================================================================
+backend/dist/
+backend/*.tsbuildinfo
+
+# ============================================================================
+# Environment Variables
+# ============================================================================
+**/.env
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+# Keep example files
+!**/.env.example
+
+# ============================================================================
+# Logs
+# ============================================================================
+**/logs/
+**/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ============================================================================
+# Operating System
+# ============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ============================================================================
+# IDEs and Editors
+# ============================================================================
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains (WebStorm, IntelliJ IDEA, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+.idea_modules/
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+*~
+.*.sw[a-p]
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ============================================================================
+# Database
+# ============================================================================
+# Prisma
+**/prisma/dev.db
+**/prisma/dev.db-journal
+**/prisma/*.db
+**/prisma/*.db-journal
+
+# PostgreSQL
+*.sql.gz
+
+# ============================================================================
+# Docker
+# ============================================================================
+# Don't ignore docker-compose.yml and Dockerfile
+# But ignore override files
+docker-compose.override.yml
+.dockerignore
+
+# ============================================================================
+# Build Output
+# ============================================================================
+**/dist/
+**/build/
+**/out/
+
+ ============================================================================
+# TypeScript
+# ============================================================================
+*.tsbuildinfo
+
+
+# ============================================================================
+# Miscellaneous
+# ============================================================================
+*.pem
+*.key
+*.cert
+*.crt
+
+# Debug files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Lock files (optional - uncomment if you want to ignore them)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
