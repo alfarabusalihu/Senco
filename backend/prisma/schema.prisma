@@ -1,0 +1,188 @@
+// ============================================================================
+// senco Weekly Planner — Prisma Schema
+// ============================================================================
+// Database: PostgreSQL
+// ORM: Prisma
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// Enums
+// ============================================================================
+
+enum Role {
+  TEAM_MEMBER      // Can view assigned projects/tasks, submit reports
+  PROJECT_MANAGER  // Can create projects, manage team, view analytics
+  ADMINISTRATOR    // Full system access, user management
+}
+
+enum ReportStatus {
+  DRAFT
+  SUBMITTED
+  LATE
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum ActivityAction {
+  REPORT_CREATED
+  REPORT_SUBMITTED
+  REPORT_UPDATED
+  PROJECT_CREATED
+  PROJECT_UPDATED
+  PROJECT_ARCHIVED
+  USER_REGISTERED
+  USER_LOGGED_IN
+  USER_ACTIVATED
+  USER_DEACTIVATED
+  ROLE_CHANGED
+}
+
+// ============================================================================
+// Models
+// ============================================================================
+
+/// User model — Three roles: TEAM_MEMBER, PROJECT_MANAGER, ADMINISTRATOR
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  role      Role     @default(TEAM_MEMBER)
+  isActive  Boolean  @default(true) @map("is_active")
+  avatar    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  reports       WeeklyReport[]
+  projects      Project[]       @relation("ProjectManager")
+  activityLogs  ActivityLog[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+/// Project model — managed by Managers, selectable during report creation
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  managerId   String        @map("manager_id")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  manager User           @relation("ProjectManager", fields: [managerId], references: [id], onDelete: Cascade)
+  reports WeeklyReport[]
+
+  // Indexes
+  @@index([managerId])
+  @@index([status])
+  @@map("projects")
+}
+
+/// WeeklyReport model — one report per user per week
+model WeeklyReport {
+  id             String       @id @default(cuid())
+  userId         String       @map("user_id")
+  projectId      String       @map("project_id")
+  weekNumber     Int          @map("week_number")
+  year           Int
+  startDate      DateTime     @map("start_date")
+  endDate        DateTime     @map("end_date")
+  tasksCompleted String       @map("tasks_completed") @db.Text
+  tasksPlanned   String       @map("tasks_planned") @db.Text
+  blockers       String?      @db.Text
+  hoursWorked    Float        @map("hours_worked")
+  notes          String?      @db.Text
+  status         ReportStatus @default(DRAFT)
+  submittedAt    DateTime?    @map("submitted_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Constraints: one report per user per week
+  @@unique([userId, weekNumber, year])
+  // Indexes
+  @@index([userId])
+  @@index([projectId])
+  @@index([weekNumber, year])
+  @@index([status])
+  @@index([submittedAt])
+  @@map("weekly_reports")
+}
+
+/// ActivityLog model — tracks all significant actions in the system
+model ActivityLog {
+  id         String         @id @default(cuid())
+  userId     String         @map("user_id")
+  action     ActivityAction
+  entityType String         @map("entity_type")
+  entityId   String         @map("entity_id")
+  metadata   Json?
+  createdAt  DateTime       @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+/// RefreshToken model — stores refresh tokens for JWT rotation
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+/// AiChatCache model — stores AI responses to avoid redundant API calls
+model AiChatCache {
+  id           String   @id @default(cuid())
+  queryHash    String   @unique @map("query_hash") // Hash of the normalized query
+  query        String   @db.Text // Original query for reference
+  response     String   @db.Text // AI-generated response
+  context      Json? // Additional context (userId, reportIds, filters, etc.)
+  tokensSaved  Int      @default(0) @map("tokens_saved") // Track token savings
+  hitCount     Int      @default(1) @map("hit_count") // Number of times cache was hit
+  expiresAt    DateTime @map("expires_at") // Cache expiration
+  createdAt    DateTime @default(now()) @map("created_at")
+  lastAccessedAt DateTime @default(now()) @map("last_accessed_at") @updatedAt
+
+  // Indexes
+  @@index([queryHash])
+  @@index([expiresAt])
+  @@index([createdAt])
+  @@map("ai_chat_cache")
+}
